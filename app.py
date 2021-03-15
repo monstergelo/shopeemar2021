@@ -7,7 +7,7 @@ from spacy.util import minibatch, compounding
 from spacy.training import Example
 
 def loaddata():
-  traincsv = csv.reader(open('train2.csv'))
+  traincsv = csv.reader(open('train.csv'))
   header = next(traincsv)
 
   result = []
@@ -19,10 +19,16 @@ def loaddata():
 
     entities = []
     if rowPOI:
-      entities.append((indexPOI.start(), indexPOI.end(), 'poi'))
+      if not indexPOI:
+        continue
+      else:
+        entities.append((indexPOI.start(), indexPOI.end(), 'poi'))
 
     if rowstreet:
-      entities.append((indexstreet.start(), indexstreet.end(), 'street'))
+      if not indexstreet:
+        continue
+      else:
+        entities.append((indexstreet.start(), indexstreet.end(), 'street'))
 
     result.append((
       rowtext,
@@ -38,21 +44,22 @@ ner.add_label('street')
 ner.add_label('poi')
 
 train_data = loaddata()
-print(train_data)
-# optimizer = nlp.begin_training()
-# for itn in range(50):
-#   random.shuffle(train_data)
-#   losses = {}
-#   examples = []
+# print(train_data)
 
-#   for text, annots in train_data:
-#     doc = nlp.make_doc(text)
-#     example = Example.from_dict(doc, annots)
-#     examples.append(example)
+optimizer = nlp.begin_training()
+for itn in range(50):
+  random.shuffle(train_data)
+  losses = {}
+  examples = []
 
-#   nlp.update(examples, sgd=optimizer, drop=0.35, losses=losses)
-#   print(losses)
+  for text, annots in train_data:
+    doc = nlp.make_doc(text)
+    example = Example.from_dict(doc, annots)
+    examples.append(example)
 
-# doc2 = nlp("jln.tirta tawar, br. junjungan, ubud, barat jalan dajan rurung")
-# for ent in doc2.ents:
-#   print(ent.label_, ent.text)
+  nlp.update(examples, sgd=optimizer, drop=0.35, losses=losses)
+  print(losses)
+
+doc2 = nlp("jln.tirta tawar, br. junjungan, ubud, barat jalan dajan rurung")
+for ent in doc2.ents:
+  print(ent.label_, ent.text)
