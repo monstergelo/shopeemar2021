@@ -3,15 +3,16 @@ import csv
 import itertools
 import re
 import random
+import time
 from spacy.util import minibatch, compounding
 from spacy.training import Example
 
-def loaddata():
+def loaddata(rowCount):
   traincsv = csv.reader(open('train.csv'))
   header = next(traincsv)
 
   result = []
-  for row in itertools.islice(traincsv, 0, 50):
+  for row in itertools.islice(traincsv, 0, rowCount):
     rowtext = row[1]
     rowPOI, rowstreet = row[2].split('/')
     indexPOI = re.search(fr'\b{rowPOI}\b', rowtext)
@@ -35,19 +36,24 @@ def loaddata():
       {'entities': entities}
     ))
   return result
+# Main
+epochCount = 1000
+rowCount = 1000
+batchSize = 128 * 1
 
-nlp = spacy.blank('id')
+nlp = spacy.blank('id', config={"nlp": {"batch_size": batchSize}})
 nlp.add_pipe('ner')
 
 ner = nlp.get_pipe('ner')
 ner.add_label('street')
 ner.add_label('poi')
 
-train_data = loaddata()
+train_data = loaddata(rowCount)
 # print(train_data)
 
 optimizer = nlp.begin_training()
-for itn in range(50):
+for itn in range(epochCount):
+  start = time.time()
   random.shuffle(train_data)
   losses = {}
   examples = []
@@ -58,7 +64,8 @@ for itn in range(50):
     examples.append(example)
 
   nlp.update(examples, sgd=optimizer, drop=0.35, losses=losses)
-  print(losses)
+  elapsed = time.time() - start
+  print(losses, f'{str(round(elapsed, 2))} detik')
 
 doc2 = nlp("jln.tirta tawar, br. junjungan, ubud, barat jalan dajan rurung")
 for ent in doc2.ents:
