@@ -37,9 +37,10 @@ def loaddata(rowCount):
     ))
   return result
 # Main
-epochCount = 1000
+epochCount = 10
 rowCount = 1000
 batchSize = 128 * 1
+learnRate = 0.001
 
 nlp = spacy.blank('id', config={"nlp": {"batch_size": batchSize}})
 nlp.add_pipe('ner')
@@ -51,7 +52,8 @@ ner.add_label('poi')
 train_data = loaddata(rowCount)
 # print(train_data)
 
-optimizer = nlp.begin_training()
+optimizer = nlp.initialize()
+optimizer.learn_rate = learnRate
 for itn in range(epochCount):
   start = time.time()
   random.shuffle(train_data)
