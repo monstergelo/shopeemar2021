@@ -20,7 +20,7 @@ def loaddata(ROW):
     header = next(traincsv)
 
     result = []
-    for row in itertools.islice(traincsv, 5659, 5660):
+    for row in itertools.islice(traincsv, 0, ROW):
         rowtext = row[1]
         rowPOI, rowstreet = row[2].split('/')
 
