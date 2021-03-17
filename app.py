@@ -9,22 +9,27 @@ from spacy.training import Example
 
 # HYPERPARAMETER
 EPOCH = 100
-ROW = 3091  # batas yang bisa 3091, kalo 3092 error, mari kita cari tahu
+ROW = 30000  # batas yang bisa 3091, kalo 3092 error, mari kita cari tahu
 BATCH_SIZE = 10
 LEARN_RATE = 0.001
 DROP_RATE = 0.35
 
 
 def loaddata(ROW):
-    traincsv = csv.reader(open('train.csv'))
+    traincsv = csv.reader(open('train.csv', encoding="utf8"))
     header = next(traincsv)
 
     result = []
-    for row in itertools.islice(traincsv, 0, ROW):
+    for row in itertools.islice(traincsv, 5659, 5660):
         rowtext = row[1]
         rowPOI, rowstreet = row[2].split('/')
-        indexPOI = re.search(fr'\b{rowPOI}\b', rowtext)
-        indexstreet = re.search(fr'\b{rowstreet}\b', rowtext)
+
+        indexPOI = re.search(fr'\b{re.escape(rowPOI)}\b', rowtext) if rowPOI else None
+        indexstreet = re.search(fr'(?s:\b{re.escape(rowstreet)}\b)', rowtext) if rowstreet else None
+
+        if indexPOI and indexstreet:
+          if indexPOI.start() <= indexstreet.end() and indexstreet.start() <= indexPOI.end():
+            continue
 
         entities = []
         if rowPOI:
